@@ -27,10 +27,10 @@ class SQLServerConnector:
             self.connection = None
             raise
 
-    def connection(self) -> pyodbc.Connection:
-        if self.connection is None:
-            raise Exception("No hay conexión activa.")
-        return self.connection
+    # Nota: no definimos un método llamado `connection` porque eso
+    # colisionaría con el atributo `self.connection` usado para almacenar
+    # el objeto de conexión. Para obtener el cursor o la conexión, use
+    # `get_cursor()` o acceda directamente a `self.connection`.
 
     def get_cursor(self):
         if self.connection is None:
@@ -71,6 +71,7 @@ if __name__ == "__main__":
     load_dotenv(override=True)
 
     # Para SQL Server
+    db = None
     try:
         sqlserver_connector = SQLServerConnector(
             host=os.environ["HOST_PRODUCCION_PROFIT"],
@@ -87,6 +88,7 @@ if __name__ == "__main__":
         print(f"Ocurrió un error en la conexión o consulta: {e}")
     finally:
         try:
-            db.close_connection()
+            if db is not None:
+                db.close_connection()
         except Exception:
             pass

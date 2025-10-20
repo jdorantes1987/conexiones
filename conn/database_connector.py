@@ -21,10 +21,24 @@ class DatabaseConnector:
         return self._connector.conn_engine()
 
     def commit(self):
+        if self._connector.connection is None:
+            raise RuntimeError("No active connection to commit.")
         return self._connector.connection.commit()
 
     def autocommit(self, value: bool):
-        self._connector.connection.autocommit(value)
+        if self._connector.connection is None:
+            raise RuntimeError("No active connection to set autocommit.")
+        # Algunos objetos de conexión (pyodbc) no exponen `autocommit` como método
+        # pero permiten cambiar la propiedad o usan otro mecanismo. Intentamos usar
+        # el método si existe, de lo contrario asignamos el atributo si está presente.
+        conn = self._connector.connection
+        if hasattr(conn, "autocommit") and callable(getattr(conn, "autocommit")):
+            conn.autocommit(value)
+        else:
+            try:
+                setattr(conn, "autocommit", value)
+            except Exception:
+                raise RuntimeError("El objeto de conexión no soporta autocommit")
 
     @property
     def connection(self):
