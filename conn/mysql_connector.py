@@ -70,6 +70,8 @@ if __name__ == "__main__":
 
     load_dotenv(override=True)
 
+    db = None
+
     try:
         mysql_connector = MySQLConnector(
             host=os.environ["HOST_PRODUCCION_MKWSP"],
@@ -86,6 +88,7 @@ if __name__ == "__main__":
         print(f"Ocurrió un error en la conexión o consulta: {e}")
     finally:
         try:
-            db.close_connection()
+            if db is not None:
+                db.close_connection()
         except Exception:
             pass
