@@ -24,6 +24,9 @@ class DBCursor(CursorProtocol):
     def fetchall(self) -> Any:
         return self._cursor.fetchall()
 
+    def lastrowid(self) -> Any:
+        return self._cursor.lastrowid
+
     def close(self) -> None:
         try:
             self._cursor.close()
