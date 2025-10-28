@@ -67,6 +67,11 @@ class DatabaseConnector:
             raise RuntimeError("No active connection to commit.")
         return self._connector.connection.commit()
 
+    def rollback(self):
+        if self._connector.connection is None:
+            raise RuntimeError("No active connection to rollback.")
+        return self._connector.connection.rollback()
+
     def autocommit(self, value: bool):
         if self._connector.connection is None:
             raise RuntimeError("No active connection to set autocommit.")
