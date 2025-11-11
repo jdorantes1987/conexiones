@@ -15,7 +15,7 @@ class SQLServerConnector:
         try:
             self.connection = pyodbc.connect(
                 f"DRIVER={{SQL Server}};"
-                f"SERVER={self.host};DATABASE={self.database};UID={self.user};PWD={self.password}"
+                f"SERVER={self.host};DATABASE={self.database};UID={self.user};PWD={self.password};isolation_level='SERIALIZABLE'"
             )
             print("Conectado a SQL Server")
         except pyodbc.Error as e:
