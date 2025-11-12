@@ -59,6 +59,14 @@ class MySQLConnector:
         )
         return create_engine(connection_url)
 
+    @property
+    def paramstyle(self) -> str:
+        """
+        Expone el paramstyle utilizado por el driver pymysql (format o pyformat).
+        """
+        # pymysql usa 'format' (%s)
+        return "format"
+
 
 # Ejemplo de uso
 if __name__ == "__main__":

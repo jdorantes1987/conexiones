@@ -61,6 +61,15 @@ class SQLServerConnector:
         )
         return create_engine(connection_url)
 
+    @property
+    def paramstyle(self) -> str:
+        """
+        Expone el paramstyle utilizado por el driver pyodbc (qmark).
+        Esto permite que DatabaseConnector lo detecte.
+        """
+        # Si usas pyodbc, generalmente es 'qmark'
+        return getattr(pyodbc, "paramstyle", "qmark")
+
 
 # Ejemplo de uso
 if __name__ == "__main__":
