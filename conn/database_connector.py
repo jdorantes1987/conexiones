@@ -20,6 +20,9 @@ class DBCursor(CursorProtocol):
     def execute(self, query: str, *args: Any, **kwargs: Any) -> Any:
         return self._cursor.execute(query, *args, **kwargs)
 
+    def executemany(self, query: str, param_list: List[Any]) -> Any:
+        return self._cursor.executemany(query, param_list)
+
     def fetchone(self) -> Any:
         return self._cursor.fetchone()
 
@@ -144,6 +147,43 @@ class DatabaseConnector:
                 cursor.execute(sql_final, params_final)
         return cursor
 
+    def executemany(self, sql: str, params_list: List[List[Any]]):
+        """
+        Ejecuta una consulta con múltiples conjuntos de parámetros.
+        args:
+            sql: consulta con '{}' como placeholders.
+            params_list: lista de listas de parámetros.
+        devuelve: DBCursor posicionado (no cerrado).
+        """
+        cursor = self.get_cursor()
+        if not params_list:
+            raise ValueError("params_list no puede estar vacío para executemany.")
+
+        # Formateamos la consulta usando el primer conjunto de parámetros
+        sql_final, _ = self._format_query(sql, params_list[0])
+
+        # Preparamos los parámetros según el paramstyle
+        paramstyle = self.paramstyle
+        final_params_list: List[Union[Tuple[Any, ...], Dict[str, Any]]] = []
+
+        for params in params_list:
+            _, params_final = self._format_query(sql, params)
+            final_params_list.append(params_final)
+
+        try:
+            if paramstyle in ("named", "pyformat"):
+                cursor.executemany(sql_final, final_params_list)
+            else:
+                cursor.executemany(sql_final, final_params_list)
+        except TypeError:
+            # fallback: pasar parámetros como *args si el driver los espera así
+            for params in final_params_list:
+                if isinstance(params, tuple):
+                    cursor.execute(sql_final, *params)
+                else:
+                    cursor.execute(sql_final, params)
+        return cursor
+
     def get_cursor(self) -> CursorProtocol:
         raw = self._connector.get_cursor()
         return DBCursor(raw)
@@ -181,29 +221,6 @@ class DatabaseConnector:
                 setattr(conn, "autocommit", value)
             except Exception:
                 raise RuntimeError("El objeto de conexión no soporta autocommit")
-
-    # def row_to_dict(self, cur, row):
-    #     """
-    #     Normaliza una fila retornada por cursor.fetchone()/fetchall() a dict.
-    #     Maneja objetos tipo mapping, tuplas/listas y construye nombres de columnas
-    #     a partir de cursor.description cuando sea necesario.
-    #     """
-    #     if row is None:
-    #         return None
-
-    #     # Si ya se comporta como mapping (p. ej. dict cursor)
-    #     if hasattr(row, "keys"):
-    #         try:
-    #             return dict(row)
-    #         except Exception:
-    #             pass
-
-    #     cols = [desc[0] for desc in cur._cursor.description]
-
-    #     try:
-    #         return dict(zip(cols, row))
-    #     except Exception:
-    #         return None
 
     def rows_to_dict(self, cur, row):
         """

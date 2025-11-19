@@ -1,4 +1,4 @@
-from typing import Protocol, runtime_checkable, Any, Optional
+from typing import Protocol, runtime_checkable, Any, Optional, List
 from sqlalchemy.engine import Engine
 
 
@@ -6,6 +6,8 @@ class CursorProtocol(Protocol):
     """Interfaz mínima que esperamos de un cursor de base de datos."""
 
     def execute(self, query: str, *args: Any, **kwargs: Any) -> Any: ...
+
+    def executemany(self, query: str, param_list: List[Any]) -> Any: ...
 
     def fetchone(self) -> Any: ...
 
