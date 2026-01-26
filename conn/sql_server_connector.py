@@ -1,4 +1,5 @@
 import pyodbc
+from urllib.parse import quote_plus
 from sqlalchemy import create_engine
 from sqlalchemy.engine import URL, Engine
 
@@ -13,9 +14,16 @@ class SQLServerConnector:
 
     def connect(self) -> None:
         try:
+            # En tu método connect() y conn_engine()
             self.connection = pyodbc.connect(
-                f"DRIVER={{SQL Server}};"
-                f"SERVER={self.host};DATABASE={self.database};UID={self.user};PWD={self.password};isolation_level='SERIALIZABLE'"
+                f"DRIVER={{FreeTDS}};"
+                f"SERVER={self.host};"
+                f"PORT=1433;"
+                f"DATABASE={self.database};"
+                f"UID={self.user};"
+                f"PWD={self.password};"
+                f"TDS_Version=7.4;"  # Versión para SQL Server 2008 en adelante
+                f"Mars_Connection=Yes;"
             )
             print("Conectado a SQL Server")
         except pyodbc.Error as e:
@@ -55,7 +63,17 @@ class SQLServerConnector:
                 print(f"Error inesperado al cerrar la conexión: {e}")
 
     def conn_engine(self) -> Engine:
-        url_sqlserver = f"DRIVER={{SQL Server}}; SERVER={self.host};DATABASE={self.database};UID={self.user};PWD={self.password}"
+        url_sqlserver = (
+            f"DRIVER={{FreeTDS}};"
+            f"SERVER={self.host};"
+            f"PORT=1433;"
+            f"DATABASE={self.database};"
+            f"UID={self.user};"
+            f"PWD={self.password};"
+            f"TDS_Version=7.4;"  # Versión para SQL Server 2008 en adelante
+            f"Mars_Connection=Yes;"
+        )
+
         connection_url = URL.create(
             "mssql+pyodbc", query={"odbc_connect": url_sqlserver}
         )
@@ -74,8 +92,18 @@ class SQLServerConnector:
 # Ejemplo de uso
 if __name__ == "__main__":
     import os
+    import sys
     from dotenv import load_dotenv
+
+    sys.path.append("../conexiones")
+
     from conn.database_connector import DatabaseConnector
+
+    env_path = os.path.join("../conexiones", ".env")
+    load_dotenv(
+        dotenv_path=env_path,
+        override=True,
+    )  # Recarga las variables de entorno desde el a
 
     load_dotenv(override=True)
 
